@@ -17,7 +17,7 @@ namespace Infastructure.Repository
 {
     public class UserRepository : IUser
     {
-        public ApplicationDbContext dbContext;
+        private readonly ApplicationDbContext dbContext;
         private readonly IConfiguration configuration;
         public UserRepository(ApplicationDbContext dbContext, IConfiguration configuration)
         {

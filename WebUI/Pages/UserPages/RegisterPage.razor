@@ -1,0 +1,112 @@
+﻿@page "/register"
+@using Application.DTOs.User.Auth
+@using Application.Services.User
+@layout MainLayout
+@inject IUserService userService;
+@inject NavigationManager navigationManager;
+
+<div class="login-container">
+    <div class="login-card card">
+        <div class="card-body">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold">Create Account</h1>
+                <p class="text-medium">Sign up for BookingPro</p>
+            </div>
+
+            <EditForm Model="registerModel" OnSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <InputText id="username" class="form-input" @bind-Value="registerModel.Username" placeholder="Enter your username" />
+                    <ValidationMessage For="@(() => registerModel.Username)" class="form-error" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="fullname">Full Name</label>
+                    <InputText id="fullname" class="form-input" @bind-Value="registerModel.FullName" placeholder="Enter your full name" />
+                    <ValidationMessage For="@(() => registerModel.FullName)" class="form-error" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <InputText id="email" class="form-input" @bind-Value="registerModel.Email" placeholder="Enter your email" />
+                    <ValidationMessage For="@(() => registerModel.Email)" class="form-error" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <InputText id="password" type="password" class="form-input" @bind-Value="registerModel.Password" placeholder="Enter your password" />
+                    <ValidationMessage For="@(() => registerModel.Password)" class="form-error" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirmPassword">Confirm Password</label>
+                    <InputText id="confirmPassword" type="password" class="form-input" @bind-Value="registerModel.ConfirmPassword" placeholder="Confirm your password" />
+                    <ValidationMessage For="@(() => registerModel.ConfirmPassword)" class="form-error" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="error-message">
+                        @ErrorMessage
+                    </div>
+                }
+
+                <button type="submit" class="btn btn-primary w-full" disabled="@IsSubmitting">
+                    @if (IsSubmitting)
+                    {
+                        <span>Processing...</span>
+                    }
+                    else
+                    {
+                        <span>Create Account</span>
+                    }
+                </button>
+            </EditForm>
+
+            <div class="text-center mt-4">
+                <button class="btn btn-outline w-full" @onclick="ToggleMode">
+                    Already have an account? Sign in!
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterUserDTO registerModel = new();
+    private bool IsSubmitting = false;
+    private string ErrorMessage = "";
+
+    private void ToggleMode()
+    {
+        ErrorMessage = "";
+        registerModel = new RegisterUserDTO();
+    }
+
+    private async Task HandleSubmit()
+    {
+        IsSubmitting = true;
+        ErrorMessage = "";
+
+        try
+        {
+            var result = await userService.RegisterUserService(registerModel);
+
+            if (result.Flag == true)
+                navigationManager.NavigateTo("/login");
+            else
+                ErrorMessage = result.message;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+}

@@ -1,0 +1,106 @@
+﻿@page "/login"
+@using Application.DTOs.User.Auth
+@using Application.Services.User
+@using WebUI.State
+@layout MainLayout
+@inject IUserService userService;
+@inject NavigationManager navManager;
+
+<div class="login-container">
+    <div class="login-card card">
+        <div class="card-body">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold">Welcome Back</h1>
+                <p class="text-medium">Sign in to your account</p>
+            </div>
+
+            <EditForm Model="loginModel" OnSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <InputText id="email" class="form-input" @bind-Value="loginModel.Email" placeholder="Enter your email" />
+                    <ValidationMessage For="@(() => loginModel.Email)" class="form-error" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <InputText id="password" type="password" class="form-input" @bind-Value="loginModel.Password" placeholder="Enter your password" />
+                    <ValidationMessage For="@(() => loginModel.Password)" class="form-error" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="error-message">
+                        @ErrorMessage
+                    </div>
+                }
+
+                <button type="submit" class="btn btn-primary w-full" disabled="@IsSubmitting">
+                    @if (IsSubmitting)
+                    {
+                        <span>Processing...</span>
+                    }
+                    else
+                    {
+                        <span>Sign In</span>
+                    }
+                </button>
+            </EditForm>
+
+            <div class="text-center mt-4">
+                <button class="btn btn-outline w-full" @onclick="ToggleMode">
+                   Dont't have an acoount?
+                </button>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="#" class="text-primary-color">Forgot your password?</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private LoginUserDTO loginModel = new();
+    private bool IsSubmitting = false;
+    private string ErrorMessage = "";
+
+    private void ToggleMode()
+    {
+        ErrorMessage = "";
+        loginModel = new LoginUserDTO();
+
+        navManager.NavigateTo("/register");
+    }
+
+    private async Task HandleSubmit()
+    {
+        IsSubmitting = true;
+        ErrorMessage = "";
+
+        try
+        {
+            var result = await userService.LoginUserService(loginModel);
+
+            if (result.Flag == true)
+            {
+                var customAuthStateProvider = (CustomAuthStateProvider)authProvider;
+                await customAuthStateProvider.UpdateAuthState(result.token);
+                navManager.NavigateTo("/dashboard");
+            }
+            else
+                ErrorMessage = result.message;
+
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+}

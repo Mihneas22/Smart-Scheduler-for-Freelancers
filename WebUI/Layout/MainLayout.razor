@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@using WebUI.State
+@inherits LayoutComponentBase
 
 <div class="main-layout">
     @if (ShowSidebar)
@@ -29,11 +30,6 @@
                         ⏰ Availability
                     </NavLink>
                 </li>
-                <li class="nav-item">
-                    <NavLink href="/insights" class="nav-link">
-                        📈 Insights
-                    </NavLink>
-                </li>
                 @if (IsAdmin)
                 {
                     <li class="nav-item">
@@ -42,6 +38,11 @@
                         </NavLink>
                     </li>
                 }
+                <li class="nav-item">
+                    <NavLink class="nav-link" @onclick="ToggleMobileSidebar">
+                        Close
+                    </NavLink>
+                </li>
             </ul>
         </nav>
     }
@@ -60,7 +61,7 @@
                     <h1 class="text-xl font-bold mb-0">@PageTitle</h1>
                 </div>
 
-                @if (IsLoggedIn)
+                @if(UserName != null)
                 {
                     <div class="flex items-center gap-4">
                         <span>Welcome, @UserName</span>
@@ -82,10 +83,28 @@
     [Parameter] public string? PageTitle { get; set; } = "Dashboard";
     [Parameter] public bool ShowSidebar { get; set; } = true;
     [Parameter] public bool ShowHeader { get; set; } = true;
-    [Parameter] public bool IsLoggedIn { get; set; } = true;
-    [Parameter] public string UserName { get; set; } = "John Doe";
-    [Parameter] public bool IsAdmin { get; set; } = false;
+    public bool IsLoggedIn { get; set; } = false;
+    public string UserName { get; set; } = "";
+    public bool IsAdmin { get; set; } = false;
     [Parameter] public bool IsMobileSidebarOpen { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var customAuthStateProvider = (CustomAuthStateProvider)authProvider;
+        var state = await authProvider.GetAuthenticationStateAsync();
+
+        var user = state.User;
+
+        if (user.Identity != null)
+            IsLoggedIn = true;
+
+        UserName = user.Identity!.Name!;
+
+        var roles = user.Claims.Where(t => t.Type == System.Security.Claims.ClaimTypes.Role);
+        var exist = roles.FirstOrDefault(e => e.Value == "Admin_User");
+        if (exist != null)
+            IsAdmin = true;
+    }
 
     private void ToggleMobileSidebar()
     {
