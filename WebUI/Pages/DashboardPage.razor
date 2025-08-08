@@ -1,5 +1,10 @@
 ﻿@page "/"
 @page "/dashboard"
+@using Application.DTOs.User.Functions.GetUserData
+@using Application.Services.User
+@using Domain.Models
+@using WebUI.State
+@inject IUserService userService;
 
 <PageTitle>Dashboard - BookingPro</PageTitle>
 
@@ -7,11 +12,23 @@
     <!-- Stats Grid -->
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-value">24</div>
+            <div class="stat-value">
+                $@if (UserData != null) {
+                    if(UserData.Appointments != null)
+                        @UserData.Appointments.Count
+                    else
+                    {
+                            @noth
+                        }
+                }else
+                {
+                    @noth
+                }
+            </div>
             <div class="stat-label">Total Bookings This Month</div>
         </div>
         <div class="stat-card" style="background: linear-gradient(135deg, var(--success-color), #10b981);">
-            <div class="stat-value">3</div>
+            <div class="stat-value">@numOfAppoint</div>
             <div class="stat-label">Appointments Today</div>
         </div>
         <div class="stat-card" style="background: linear-gradient(135deg, var(--warning-color), #f59e0b);">
@@ -19,7 +36,17 @@
             <div class="stat-label">Cancellations</div>
         </div>
         <div class="stat-card" style="background: linear-gradient(135deg, var(--accent-color), #059669);">
-            <div class="stat-value">$2,400</div>
+            <div class="stat-value">
+                $
+                @if (UserData != null) 
+                {
+                    @UserData.RevenueGeneratedThisMonth
+                }
+                else
+                {
+                    @noth
+                }
+            </div>
             <div class="stat-label">Revenue Estimate</div>
         </div>
     </div>
@@ -31,28 +58,39 @@
                 <h3 class="card-title">Upcoming Appointments</h3>
             </div>
             <div class="card-body">
-                <div class="appointment-list">
-                    @foreach (var appointment in upcomingAppointments)
-                    {
-                        <div class="appointment-item">
-                            <div class="appointment-time">
-                                <div class="font-medium">@appointment.Time</div>
-                                <div class="text-sm text-light">@appointment.Date</div>
+                @if (UserData != null && UserData.Appointments != null)
+                {
+                    <div class="appointment-list">
+                        @foreach (var appointment in UserData.Appointments)
+                        {
+                            <div class="appointment-item">
+                                <div class="appointment-time">
+                                    <div class="font-medium">@appointment.StartTime</div>
+                                    <div class="text-sm text-light">@appointment.EndTime</div>
+                                </div>
+                                <div class="appointment-details">
+                                    <div class="font-medium">@appointment.ClientName</div>
+                                    <div class="text-sm text-medium">@appointment.Title</div>
+                                </div>
+                                <div class="appointment-status">
+                                    <span class="status-badge @appointment.Status!.ToLower()">@appointment.Status</span>
+                                </div>
                             </div>
-                            <div class="appointment-details">
-                                <div class="font-medium">@appointment.ClientName</div>
-                                <div class="text-sm text-medium">@appointment.Service</div>
-                            </div>
-                            <div class="appointment-status">
-                                <span class="status-badge @appointment.Status.ToLower()">@appointment.Status</span>
-                            </div>
-                        </div>
-                    }
-                </div>
 
-                <div class="text-center mt-4">
-                    <a href="/appointments" class="btn btn-outline">View All Appointments</a>
-                </div>
+                            <div class="text-center mt-4">
+                                <a href="/appointments" class="btn btn-outline">View All Appointments</a>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="appointment-list-null">
+                        <div class="appointment-item-null">
+                            <div class="stat-value">No appointments</div>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
 
@@ -121,14 +159,38 @@
 </div>
 
 @code {
-    private List<AppointmentInfo> upcomingAppointments = new()
+    private List<Appointment> appointments = new();
+    private User? UserData { get; set; }
+    private int numOfAppoint = 0;
+    private DateTime nowDate = DateTime.Now;
+    private const int noth = 0;
+
+    protected override async Task OnInitializedAsync()
     {
-        new AppointmentInfo { ClientName = "Sarah Johnson", Service = "Business Consultation", Time = "10:00 AM", Date = "Today", Status = "Confirmed" },
-        new AppointmentInfo { ClientName = "Mike Chen", Service = "Website Design Review", Time = "2:00 PM", Date = "Today", Status = "Confirmed" },
-        new AppointmentInfo { ClientName = "Emily Davis", Service = "Marketing Strategy", Time = "11:00 AM", Date = "Tomorrow", Status = "Pending" },
-        new AppointmentInfo { ClientName = "Robert Wilson", Service = "Technical Support", Time = "3:00 PM", Date = "Dec 15", Status = "Confirmed" },
-        new AppointmentInfo { ClientName = "Lisa Anderson", Service = "Project Planning", Time = "9:00 AM", Date = "Dec 16", Status = "Confirmed" }
-    };
+        var customAuthStateProvider = (CustomAuthStateProvider)authProvider;
+        var state = await authProvider.GetAuthenticationStateAsync();
+
+        var user = state.User.Identity;
+        if(user != null)
+        {
+            var name = user.Name;
+            if(name != null)
+            {
+                var result = await userService.GetUserService(new GetUserDTO { UserName = name });
+
+                if(result.Flag == true)
+                {
+                    UserData = result.userData;
+                    if(UserData.Appointments != null)
+                        foreach (var app in UserData.Appointments)
+                        {
+                            if (app.StartTime < nowDate && app.EndTime > nowDate)
+                                numOfAppoint += 1;
+                        }
+                }               
+            }
+        }
+    }
 
     private List<NotificationInfo> notifications = new()
     {
@@ -137,15 +199,6 @@
         new NotificationInfo { Type = "info", Title = "New Booking Request", Message = "Michael Brown requested a consultation", Time = "3 hours ago" },
         new NotificationInfo { Type = "reminder", Title = "Weekly Schedule", Message = "Remember to update your availability", Time = "1 day ago" }
     };
-
-    public class AppointmentInfo
-    {
-        public string ClientName { get; set; } = "";
-        public string Service { get; set; } = "";
-        public string Time { get; set; } = "";
-        public string Date { get; set; } = "";
-        public string Status { get; set; } = "";
-    }
 
     public class NotificationInfo
     {

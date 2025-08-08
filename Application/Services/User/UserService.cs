@@ -1,4 +1,5 @@
 ﻿using Application.DTOs.User.Auth;
+using Application.DTOs.User.Functions.GetUserData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,13 @@ namespace Application.Services.User
         public UserService(HttpClient httpClient)
         {
             this.httpClient = httpClient;
+        }
+
+        public async Task<GetUserResponse> GetUserService(GetUserDTO getUserDTO)
+        {
+            var request = await httpClient.GetAsync($"api/user/getUser/{getUserDTO.UserName}");
+            var result = await request.Content.ReadFromJsonAsync<GetUserResponse>();
+            return result!;
         }
 
         public async Task<LoginUserResponse> LoginUserService(LoginUserDTO loginUserDTO)

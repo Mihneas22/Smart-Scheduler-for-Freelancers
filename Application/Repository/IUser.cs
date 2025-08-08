@@ -1,4 +1,5 @@
 ﻿using Application.DTOs.User.Auth;
+using Application.DTOs.User.Functions.GetUserData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,5 +13,7 @@ namespace Application.Repository
         Task<LoginUserResponse> LoginUserAsync(LoginUserDTO loginUserDTO);
 
         Task<RegisterUserResponse> RegisterUserAsync(RegisterUserDTO registerUserDTO);
+   
+        Task<GetUserResponse> GetUserAsync(GetUserDTO userDTO);
     }
 }

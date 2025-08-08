@@ -10,6 +10,14 @@
         border-bottom: none;
     }
 
+.appointment-list-null{
+    display:flex;
+    justify-content:center;
+    height:100%;
+    width: 100%;
+    align-items: center;
+}
+
 .appointment-time {
     min-width: 80px;
 }

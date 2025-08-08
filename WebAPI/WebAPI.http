@@ -1,6 +1,6 @@
 @WebAPI_HostAddress = http://localhost:5298
 
-POST {{WebAPI_HostAddress}}/api/user/register
+GET {{WebAPI_HostAddress}}/api/user/getUser/Mihneas22
 Accept: application/json
 Content-Type: application/json
 {
