@@ -22,8 +22,6 @@ namespace Domain.Models
 
         public string? Role { get; set; }
 
-        public ICollection<Service>? Services { get; set; }
-
         public ICollection<Appointment>? Appointments { get; set; }
 
         public int? RevenueGeneratedThisMonth { get; set; }

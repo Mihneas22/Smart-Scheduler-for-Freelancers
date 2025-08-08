@@ -17,17 +17,12 @@ namespace Infastructure.Context
 
         public DbSet<User> UserEntity { get; set; }
         public DbSet<Appointment> AppointmentEntity { get; set; }
-        public DbSet<Service> ServiceEntity { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
                 .HasMany(e => e.Appointments)
                 .WithMany(e => e.FreelancerUsers);
-
-            modelBuilder.Entity<User>()
-                .HasMany(e => e.Services)
-                .WithOne(e => e.Freelancer); 
         }
     }
 }

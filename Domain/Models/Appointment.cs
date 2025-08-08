@@ -12,13 +12,9 @@ namespace Domain.Models
         [Key]
         public Guid Id { get; set; }
 
-        public Guid? ClientId { get; set; }
-
         public string? ClientName { get; set; }
 
         public ICollection<User>? FreelancerUsers { get; set; }
-
-        public string? FreelancerName { get; set; }
 
         public string? Title { get; set; }
 

@@ -118,7 +118,6 @@ namespace Infastructure.Repository
                 FullName = registerUserDTO.FullName,
                 Password = BCrypt.Net.BCrypt.HashPassword(registerUserDTO.Password),
                 Role = registerUserDTO.Role,
-                Services = new List<Service>(),
                 Appointments = new List<Appointment>(),
                 RevenueGeneratedThisMonth = 0,
                 CreatedAt = DateTime.Now,
