@@ -1,0 +1,100 @@
+﻿@inherits LayoutComponentBase
+
+<div class="main-layout">
+    @if (ShowSidebar)
+    {
+        <nav class="sidebar @(IsMobileSidebarOpen ? "open" : "")">
+            <div class="nav-brand mb-6">
+                <h2 class="text-xl font-bold text-primary-color">BookingPro</h2>
+            </div>
+
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <NavLink href="/dashboard" class="nav-link" Match="NavLinkMatch.All">
+                        📊 Dashboard
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink href="/calendar" class="nav-link">
+                        📅 Calendar
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink href="/appointments" class="nav-link">
+                        📝 Appointments
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink href="/availability" class="nav-link">
+                        ⏰ Availability
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink href="/insights" class="nav-link">
+                        📈 Insights
+                    </NavLink>
+                </li>
+                @if (IsAdmin)
+                {
+                    <li class="nav-item">
+                        <NavLink href="/admin" class="nav-link">
+                            👑 Admin Panel
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+
+    <main class="main-content @(ShowSidebar ? "" : "full-width")">
+        @if (ShowHeader)
+        {
+            <header class="header">
+                <div class="flex items-center gap-4">
+                    @if (ShowSidebar)
+                    {
+                        <button class="btn btn-outline" @onclick="ToggleMobileSidebar">
+                            ☰
+                        </button>
+                    }
+                    <h1 class="text-xl font-bold mb-0">@PageTitle</h1>
+                </div>
+
+                @if (IsLoggedIn)
+                {
+                    <div class="flex items-center gap-4">
+                        <span>Welcome, @UserName</span>
+                        <button class="btn btn-secondary" @onclick="Logout">
+                            Logout
+                        </button>
+                    </div>
+                }
+            </header>
+        }
+
+        <div class="fade-in">
+            @Body
+        </div>
+    </main>
+</div>
+
+@code {
+    [Parameter] public string? PageTitle { get; set; } = "Dashboard";
+    [Parameter] public bool ShowSidebar { get; set; } = true;
+    [Parameter] public bool ShowHeader { get; set; } = true;
+    [Parameter] public bool IsLoggedIn { get; set; } = true;
+    [Parameter] public string UserName { get; set; } = "John Doe";
+    [Parameter] public bool IsAdmin { get; set; } = false;
+    [Parameter] public bool IsMobileSidebarOpen { get; set; } = false;
+
+    private void ToggleMobileSidebar()
+    {
+        IsMobileSidebarOpen = !IsMobileSidebarOpen;
+    }
+
+    private void Logout()
+    {
+        // Handle logout logic
+        // Navigation.NavigateTo("/login");
+    }
+}

@@ -1,0 +1,242 @@
+﻿@page "/appointments"
+
+<PageTitle>New Appointment - BookingPro</PageTitle>
+
+<div class="booking-container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Create New Appointment</h2>
+            <p class="text-medium">Book an appointment for your client</p>
+        </div>
+        <div class="card-body">
+            <EditForm Model="@bookingModel" OnValidSubmit="@HandleSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="form-grid">
+                    <!-- Client Information -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Client Information</h3>
+
+                        <div class="form-group">
+                            <label class="form-label" for="clientName">Full Name *</label>
+                            <InputText id="clientName" class="form-input" @bind-Value="bookingModel.ClientName" placeholder="Enter client's full name" />
+                            <ValidationMessage For="@(() => bookingModel.ClientName)" class="form-error" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="clientEmail">Email Address *</label>
+                            <InputText id="clientEmail" type="email" class="form-input" @bind-Value="bookingModel.ClientEmail" placeholder="client@email.com" />
+                            <ValidationMessage For="@(() => bookingModel.ClientEmail)" class="form-error" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="clientPhone">Phone Number</label>
+                            <InputText id="clientPhone" class="form-input" @bind-Value="bookingModel.ClientPhone" placeholder="(555) 123-4567" />
+                            <ValidationMessage For="@(() => bookingModel.ClientPhone)" class="form-error" />
+                        </div>
+                    </div>
+
+                    <!-- Appointment Details -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Appointment Details</h3>
+
+                        <div class="form-group">
+                            <label class="form-label" for="serviceType">Service Type *</label>
+                            <InputSelect id="serviceType" class="form-select" @bind-Value="bookingModel.ServiceType">
+                                <option value="">Select a service...</option>
+                                <option value="consultation">Business Consultation</option>
+                                <option value="design">Design Review</option>
+                                <option value="strategy">Marketing Strategy</option>
+                                <option value="technical">Technical Support</option>
+                                <option value="planning">Project Planning</option>
+                                <option value="training">Training Session</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => bookingModel.ServiceType)" class="form-error" />
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="appointmentDate">Date *</label>
+                                <InputDate id="appointmentDate" class="form-input" @bind-Value="bookingModel.AppointmentDate" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                <ValidationMessage For="@(() => bookingModel.AppointmentDate)" class="form-error" />
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="appointmentTime">Time *</label>
+                                <InputSelect id="appointmentTime" class="form-select" @bind-Value="bookingModel.AppointmentTime">
+                                    <option value="">Select time...</option>
+                                    @foreach (var time in availableTimeSlots)
+                                    {
+                                        <option value="@time">@time</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => bookingModel.AppointmentTime)" class="form-error" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="duration">Duration</label>
+                            <InputSelect id="duration" class="form-select" @bind-Value="bookingModel.Duration">
+                                <option value="30">30 minutes</option>
+                                <option value="60">1 hour</option>
+                                <option value="90">1.5 hours</option>
+                                <option value="120">2 hours</option>
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="notes">Notes</label>
+                            <InputTextArea id="notes" class="form-input" rows="4" @bind-Value="bookingModel.Notes" placeholder="Any special requirements or notes for this appointment..." />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reminder Settings -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Reminder Settings</h3>
+
+                    <div class="form-group">
+                        <label class="toggle">
+                            <InputCheckbox @bind-Value="bookingModel.SendReminder" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="form-label" style="margin-left: 12px;">Send email reminder to client</span>
+                    </div>
+
+                    @if (bookingModel.SendReminder)
+                    {
+                        <div class="reminder-options fade-in">
+                            <div class="form-group">
+                                <label class="form-label">Reminder Time</label>
+                                <div class="reminder-checkboxes">
+                                    <label class="checkbox-label">
+                                        <InputCheckbox @bind-Value="bookingModel.Reminder24Hours" />
+                                        24 hours before
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <InputCheckbox @bind-Value="bookingModel.Reminder2Hours" />
+                                        2 hours before
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <InputCheckbox @bind-Value="bookingModel.Reminder30Minutes" />
+                                        30 minutes before
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="error-message">
+                        @ErrorMessage
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(SuccessMessage))
+                {
+                    <div class="success-message">
+                        @SuccessMessage
+                    </div>
+                }
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
+                        @if (IsSubmitting)
+                        {
+                            <span>Creating Appointment...</span>
+                        }
+                        else
+                        {
+                            <span>Create Appointment</span>
+                        }
+                    </button>
+                    <a href="/dashboard" class="btn btn-outline">Cancel</a>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private BookingModel bookingModel = new();
+    private bool IsSubmitting = false;
+    private string ErrorMessage = "";
+    private string SuccessMessage = "";
+
+    private List<string> availableTimeSlots = new()
+    {
+        "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
+        "12:00 PM", "12:30 PM", "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM",
+        "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM", "05:00 PM"
+    };
+
+    protected override void OnInitialized()
+    {
+        // Set default values
+        bookingModel.AppointmentDate = DateTime.Today.AddDays(1);
+        bookingModel.Duration = 60;
+        bookingModel.SendReminder = true;
+        bookingModel.Reminder24Hours = true;
+    }
+
+    private async Task HandleSubmit()
+    {
+        IsSubmitting = true;
+        ErrorMessage = "";
+        SuccessMessage = "";
+
+        try
+        {
+            // Simulate API call
+            await Task.Delay(1500);
+
+            // Validate business logic
+            if (bookingModel.AppointmentDate <= DateTime.Today)
+            {
+                throw new Exception("Appointment date must be in the future.");
+            }
+
+            SuccessMessage = $"Appointment successfully created for {bookingModel.ClientName} on {bookingModel.AppointmentDate:MMMM d, yyyy} at {bookingModel.AppointmentTime}.";
+
+            // Reset form after success
+            await Task.Delay(2000);
+            bookingModel = new BookingModel();
+            OnInitialized();
+            SuccessMessage = "";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    public class BookingModel
+    {
+        public string ClientName { get; set; } = "";
+
+        public string ClientEmail { get; set; } = "";
+
+        public string ClientPhone { get; set; } = "";
+
+        public string ServiceType { get; set; } = "";
+
+        public DateTime AppointmentDate { get; set; }
+
+        public string AppointmentTime { get; set; } = "";
+
+        public int Duration { get; set; } = 60;
+
+        public string Notes { get; set; } = "";
+
+        public bool SendReminder { get; set; } = true;
+        public bool Reminder24Hours { get; set; }
+        public bool Reminder2Hours { get; set; }
+        public bool Reminder30Minutes { get; set; }
+    }
+}

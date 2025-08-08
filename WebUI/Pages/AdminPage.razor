@@ -1,0 +1,252 @@
+﻿@page "/admin"
+
+<PageTitle>Admin Panel - BookingPro</PageTitle>
+
+<div class="admin-container">
+    <!-- Admin Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">147</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, var(--success-color), #10b981);">
+            <div class="stat-value">132</div>
+            <div class="stat-label">Active Users</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, var(--warning-color), #f59e0b);">
+            <div class="stat-value">15</div>
+            <div class="stat-label">Suspended Users</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, var(--accent-color), #059669);">
+            <div class="stat-value">1,247</div>
+            <div class="stat-label">Total Bookings</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">User Management</h2>
+            <div class="admin-actions">
+                <div class="search-box">
+                    <input type="text" class="form-input" placeholder="Search users..." @bind="searchTerm" @oninput="FilterUsers" />
+                </div>
+                <button class="btn btn-primary" @onclick="ShowAddUserModal">
+                    Add New User
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Registration Date</th>
+                            <th>Status</th>
+                            <th>Bookings</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in filteredUsers)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-avatar">@user.Name.Substring(0, 1).ToUpper()</div>
+                                        <div class="user-details">
+                                            <div class="user-name">@user.Name</div>
+                                            <div class="user-role">@user.Role</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>@user.Email</td>
+                                <td>@user.RegisteredDate.ToString("MMM d, yyyy")</td>
+                                <td>
+                                    <span class="status-badge @user.Status.ToLower()">@user.Status</span>
+                                </td>
+                                <td>@user.BookingCount</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-icon" title="View Details" @onclick="() => ViewUser(user)">👁️</button>
+                                        <button class="btn-icon" title="Edit User" @onclick="() => EditUser(user)">✏️</button>
+                                        <button class="btn-icon @(user.Status == "Active" ? "suspend" : "activate")"
+                                                title="@(user.Status == "Active" ? "Suspend" : "Activate")"
+                                                @onclick="() => ToggleUserStatus(user)">
+                                            @(user.Status == "Active" ? "⏸️" : "▶️")
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="btn btn-outline" disabled="@(currentPage == 1)" @onclick="PreviousPage">
+                    Previous
+                </button>
+                <span class="page-info">
+                    Page @currentPage of @totalPages
+                </span>
+                <button class="btn btn-outline" disabled="@(currentPage == totalPages)" @onclick="NextPage">
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Logs Section -->
+    <div class="card mt-6">
+        <div class="card-header">
+            <h3 class="card-title">Recent System Logs</h3>
+            <div class="log-filters">
+                <select class="form-select" @bind="selectedLogType">
+                    <option value="">All Logs</option>
+                    <option value="info">Info</option>
+                    <option value="warning">Warning</option>
+                    <option value="error">Error</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="log-list">
+                @foreach (var log in systemLogs.Take(10))
+                {
+                    <div class="log-entry @log.Type">
+                        <div class="log-time">@log.Timestamp.ToString("MMM d, HH:mm")</div>
+                        <div class="log-type">@log.Type.ToUpper()</div>
+                        <div class="log-message">@log.Message</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<UserInfo> users = new();
+    private List<UserInfo> filteredUsers = new();
+    private List<SystemLog> systemLogs = new();
+    private string searchTerm = "";
+    private string selectedLogType = "";
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages = 1;
+
+    protected override void OnInitialized()
+    {
+        LoadUsers();
+        LoadSystemLogs();
+        FilterUsers();
+    }
+
+    private void LoadUsers()
+    {
+        // Sample user data
+        users = new List<UserInfo>
+        {
+            new UserInfo { Id = 1, Name = "John Doe", Email = "john@email.com", Role = "Business Owner", Status = "Active", RegisteredDate = DateTime.Now.AddDays(-30), BookingCount = 45 },
+            new UserInfo { Id = 2, Name = "Jane Smith", Email = "jane@email.com", Role = "Consultant", Status = "Active", RegisteredDate = DateTime.Now.AddDays(-25), BookingCount = 32 },
+            new UserInfo { Id = 3, Name = "Bob Johnson", Email = "bob@email.com", Role = "Therapist", Status = "Suspended", RegisteredDate = DateTime.Now.AddDays(-20), BookingCount = 0 },
+            new UserInfo { Id = 4, Name = "Alice Brown", Email = "alice@email.com", Role = "Tutor", Status = "Active", RegisteredDate = DateTime.Now.AddDays(-15), BookingCount = 67 },
+            new UserInfo { Id = 5, Name = "Mike Wilson", Email = "mike@email.com", Role = "Mechanic", Status = "Active", RegisteredDate = DateTime.Now.AddDays(-10), BookingCount = 23 },
+            new UserInfo { Id = 6, Name = "Sarah Davis", Email = "sarah@email.com", Role = "Designer", Status = "Active", RegisteredDate = DateTime.Now.AddDays(-5), BookingCount = 18 },
+            new UserInfo { Id = 7, Name = "Tom Anderson", Email = "tom@email.com", Role = "Coach", Status = "Active", RegisteredDate = DateTime.Now.AddDays(-2), BookingCount = 8 }
+        };
+
+        totalPages = (int)Math.Ceiling((double)users.Count / pageSize);
+    }
+
+    private void LoadSystemLogs()
+    {
+        systemLogs = new List<SystemLog>
+        {
+            new SystemLog { Type = "info", Message = "User john@email.com logged in successfully", Timestamp = DateTime.Now.AddMinutes(-5) },
+            new SystemLog { Type = "warning", Message = "Failed login attempt for admin@system.com", Timestamp = DateTime.Now.AddMinutes(-12) },
+            new SystemLog { Type = "info", Message = "New appointment created by jane@email.com", Timestamp = DateTime.Now.AddMinutes(-18) },
+            new SystemLog { Type = "error", Message = "Database connection timeout occurred", Timestamp = DateTime.Now.AddMinutes(-25) },
+            new SystemLog { Type = "info", Message = "System backup completed successfully", Timestamp = DateTime.Now.AddHours(-2) },
+            new SystemLog { Type = "warning", Message = "High memory usage detected (85%)", Timestamp = DateTime.Now.AddHours(-3) },
+            new SystemLog { Type = "info", Message = "User alice@email.com updated profile", Timestamp = DateTime.Now.AddHours(-4) }
+        };
+    }
+
+    private void FilterUsers()
+    {
+        filteredUsers = users.Where(u =>
+            string.IsNullOrEmpty(searchTerm) ||
+            u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        StateHasChanged();
+    }
+
+    private void ViewUser(UserInfo user)
+    {
+        // Navigate to user details or show modal
+        Console.WriteLine($"View user: {user.Name}");
+    }
+
+    private void EditUser(UserInfo user)
+    {
+        // Open edit user modal
+        Console.WriteLine($"Edit user: {user.Name}");
+    }
+
+    private async Task ToggleUserStatus(UserInfo user)
+    {
+        user.Status = user.Status == "Active" ? "Suspended" : "Active";
+        // Simulate API call
+        await Task.Delay(300);
+        StateHasChanged();
+    }
+
+    private void ShowAddUserModal()
+    {
+        // Show add user modal
+        Console.WriteLine("Show add user modal");
+    }
+
+    private void PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            FilterUsers();
+        }
+    }
+
+    private void NextPage()
+    {
+        if (currentPage < totalPages)
+        {
+            currentPage++;
+            FilterUsers();
+        }
+    }
+
+    public class UserInfo
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Role { get; set; } = "";
+        public string Status { get; set; } = "";
+        public DateTime RegisteredDate { get; set; }
+        public int BookingCount { get; set; }
+    }
+
+    public class SystemLog
+    {
+        public string Type { get; set; } = "";
+        public string Message { get; set; } = "";
+        public DateTime Timestamp { get; set; }
+    }
+}

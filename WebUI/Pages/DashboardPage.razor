@@ -1,0 +1,157 @@
+﻿@page "/"
+@page "/dashboard"
+
+<PageTitle>Dashboard - BookingPro</PageTitle>
+
+<div class="dashboard-container">
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">24</div>
+            <div class="stat-label">Total Bookings This Month</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, var(--success-color), #10b981);">
+            <div class="stat-value">3</div>
+            <div class="stat-label">Appointments Today</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, var(--warning-color), #f59e0b);">
+            <div class="stat-value">2</div>
+            <div class="stat-label">Cancellations</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, var(--accent-color), #059669);">
+            <div class="stat-value">$2,400</div>
+            <div class="stat-label">Revenue Estimate</div>
+        </div>
+    </div>
+
+    <div class="grid grid-2">
+        <!-- Upcoming Appointments -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Upcoming Appointments</h3>
+            </div>
+            <div class="card-body">
+                <div class="appointment-list">
+                    @foreach (var appointment in upcomingAppointments)
+                    {
+                        <div class="appointment-item">
+                            <div class="appointment-time">
+                                <div class="font-medium">@appointment.Time</div>
+                                <div class="text-sm text-light">@appointment.Date</div>
+                            </div>
+                            <div class="appointment-details">
+                                <div class="font-medium">@appointment.ClientName</div>
+                                <div class="text-sm text-medium">@appointment.Service</div>
+                            </div>
+                            <div class="appointment-status">
+                                <span class="status-badge @appointment.Status.ToLower()">@appointment.Status</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="/appointments" class="btn btn-outline">View All Appointments</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Notifications & Alerts</h3>
+            </div>
+            <div class="card-body">
+                <div class="notification-list">
+                    @foreach (var notification in notifications)
+                    {
+                        <div class="notification-item @notification.Type">
+                            <div class="notification-icon">
+                                @if (notification.Type == "reminder")
+                                {
+                                    <span>⏰</span>
+                                }
+                                else if (notification.Type == "warning")
+                                {
+                                    <span>⚠️</span>
+                                }
+                                else
+                                {
+                                    <span>ℹ️</span>
+                                }
+                            </div>
+                            <div class="notification-content">
+                                <div class="font-medium">@notification.Title</div>
+                                <div class="text-sm text-medium">@notification.Message</div>
+                                <div class="text-sm text-light">@notification.Time</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card mt-6">
+        <div class="card-header">
+            <h3 class="card-title">Quick Actions</h3>
+        </div>
+        <div class="card-body">
+            <div class="quick-actions">
+                <a href="/appointments/new" class="quick-action-btn">
+                    <div class="quick-action-icon">📝</div>
+                    <div>New Appointment</div>
+                </a>
+                <a href="/calendar" class="quick-action-btn">
+                    <div class="quick-action-icon">📅</div>
+                    <div>View Calendar</div>
+                </a>
+                <a href="/availability" class="quick-action-btn">
+                    <div class="quick-action-icon">⏰</div>
+                    <div>Set Availability</div>
+                </a>
+                <a href="/insights" class="quick-action-btn">
+                    <div class="quick-action-icon">📊</div>
+                    <div>View Reports</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<AppointmentInfo> upcomingAppointments = new()
+    {
+        new AppointmentInfo { ClientName = "Sarah Johnson", Service = "Business Consultation", Time = "10:00 AM", Date = "Today", Status = "Confirmed" },
+        new AppointmentInfo { ClientName = "Mike Chen", Service = "Website Design Review", Time = "2:00 PM", Date = "Today", Status = "Confirmed" },
+        new AppointmentInfo { ClientName = "Emily Davis", Service = "Marketing Strategy", Time = "11:00 AM", Date = "Tomorrow", Status = "Pending" },
+        new AppointmentInfo { ClientName = "Robert Wilson", Service = "Technical Support", Time = "3:00 PM", Date = "Dec 15", Status = "Confirmed" },
+        new AppointmentInfo { ClientName = "Lisa Anderson", Service = "Project Planning", Time = "9:00 AM", Date = "Dec 16", Status = "Confirmed" }
+    };
+
+    private List<NotificationInfo> notifications = new()
+    {
+        new NotificationInfo { Type = "reminder", Title = "Upcoming Appointment", Message = "Sarah Johnson appointment in 2 hours", Time = "2 mins ago" },
+        new NotificationInfo { Type = "warning", Title = "Payment Overdue", Message = "Invoice #1234 is 3 days overdue", Time = "1 hour ago" },
+        new NotificationInfo { Type = "info", Title = "New Booking Request", Message = "Michael Brown requested a consultation", Time = "3 hours ago" },
+        new NotificationInfo { Type = "reminder", Title = "Weekly Schedule", Message = "Remember to update your availability", Time = "1 day ago" }
+    };
+
+    public class AppointmentInfo
+    {
+        public string ClientName { get; set; } = "";
+        public string Service { get; set; } = "";
+        public string Time { get; set; } = "";
+        public string Date { get; set; } = "";
+        public string Status { get; set; } = "";
+    }
+
+    public class NotificationInfo
+    {
+        public string Type { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Message { get; set; } = "";
+        public string Time { get; set; } = "";
+    }
+}

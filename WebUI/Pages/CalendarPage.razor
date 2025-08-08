@@ -1,0 +1,195 @@
+﻿@page "/calendar"
+
+<PageTitle>Calendar - BookingPro</PageTitle>
+
+<div class="calendar-container">
+    <div class="grid">
+        <div class="calendar-main">
+            <div class="calendar">
+                <div class="calendar-header">
+                    <button class="btn btn-outline" @onclick="PreviousMonth">❮</button>
+                    <h2 class="text-xl font-bold">@currentDate.ToString("MMMM yyyy")</h2>
+                    <button class="btn btn-outline" @onclick="NextMonth">❯</button>
+                </div>
+
+                <div class="calendar-grid">
+                    @foreach (var dayName in dayNames)
+                    {
+                        <div class="calendar-day-header">@dayName</div>
+                    }
+
+                    @foreach (var day in calendarDays)
+                    {
+                        <div class="calendar-day @(day.IsToday ? "today" : "") @(day.IsOtherMonth ? "other-month" : "")"
+                             @onclick="() => SelectDay(day)">
+                            <div class="calendar-day-number">@day.Day</div>
+                            @if (day.AppointmentCount > 0)
+                            {
+                                <div class="appointment-indicators">
+                                    @for (int i = 0; i < Math.Min(day.AppointmentCount, 3); i++)
+                                    {
+                                        <span class="appointment-indicator"></span>
+                                    }
+                                    @if (day.AppointmentCount > 3)
+                                    {
+                                        <span class="text-sm">+@(day.AppointmentCount - 3)</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if (selectedDay != null)
+        {
+            <div class="day-panel slide-in-right">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@selectedDay.Date.ToString("dddd, MMMM d")</h3>
+                        <button class="btn btn-outline" @onclick="() => selectedDay = null">✕</button>
+                    </div>
+                    <div class="card-body">
+                        @if (selectedDay.Appointments.Any())
+                        {
+                            <div class="appointment-list">
+                                @foreach (var appointment in selectedDay.Appointments)
+                                {
+                                    <div class="appointment-item">
+                                        <div class="appointment-time">@appointment.Time</div>
+                                        <div class="appointment-details">
+                                            <div class="font-medium">@appointment.ClientName</div>
+                                            <div class="text-sm text-medium">@appointment.Service</div>
+                                            <div class="text-sm text-light">@appointment.Email</div>
+                                        </div>
+                                        <div class="appointment-actions">
+                                            <button class="btn btn-outline btn-sm">Edit</button>
+                                            <button class="btn btn-error btn-sm">Cancel</button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="no-appointments">
+                                <p class="text-medium text-center">No appointments scheduled</p>
+                            </div>
+                        }
+
+                        <div class="mt-4">
+                            <button class="btn btn-primary w-full">Add New Appointment</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private DateTime currentDate = DateTime.Now;
+    private List<CalendarDay> calendarDays = new();
+    private CalendarDay? selectedDay;
+    private string[] dayNames = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+
+    protected override void OnInitialized()
+    {
+        GenerateCalendarDays();
+    }
+
+    private void GenerateCalendarDays()
+    {
+        calendarDays.Clear();
+
+        var firstDayOfMonth = new DateTime(currentDate.Year, currentDate.Month, 1);
+        var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+        var firstDayOfWeek = firstDayOfMonth.AddDays(-(int)firstDayOfMonth.DayOfWeek);
+
+        var currentDay = firstDayOfWeek;
+
+        // Generate 6 weeks (42 days) to fill the calendar grid
+        for (int i = 0; i < 42; i++)
+        {
+            var calendarDay = new CalendarDay
+            {
+                Date = currentDay,
+                Day = currentDay.Day,
+                IsToday = currentDay.Date == DateTime.Today,
+                IsOtherMonth = currentDay.Month != currentDate.Month,
+                AppointmentCount = GetAppointmentCount(currentDay),
+                Appointments = GetAppointmentsForDay(currentDay)
+            };
+
+            calendarDays.Add(calendarDay);
+            currentDay = currentDay.AddDays(1);
+        }
+    }
+
+    private int GetAppointmentCount(DateTime date)
+    {
+        // Simulate appointment data
+        var random = new Random(date.GetHashCode());
+        return random.Next(0, 5);
+    }
+
+    private List<AppointmentInfo> GetAppointmentsForDay(DateTime date)
+    {
+        var appointments = new List<AppointmentInfo>();
+        var count = GetAppointmentCount(date);
+
+        var sampleClients = new[] { "John Doe", "Jane Smith", "Bob Johnson", "Alice Brown", "Mike Wilson" };
+        var sampleServices = new[] { "Consultation", "Design Review", "Strategy Session", "Technical Support", "Project Planning" };
+
+        for (int i = 0; i < count; i++)
+        {
+            appointments.Add(new AppointmentInfo
+            {
+                Time = $"{9 + i * 2}:00 AM",
+                ClientName = sampleClients[i % sampleClients.Length],
+                Service = sampleServices[i % sampleServices.Length],
+                Email = $"{sampleClients[i % sampleClients.Length].ToLower().Replace(" ", ".")}@email.com"
+            });
+        }
+
+        return appointments;
+    }
+
+    private void PreviousMonth()
+    {
+        currentDate = currentDate.AddMonths(-1);
+        GenerateCalendarDays();
+        selectedDay = null;
+    }
+
+    private void NextMonth()
+    {
+        currentDate = currentDate.AddMonths(1);
+        GenerateCalendarDays();
+        selectedDay = null;
+    }
+
+    private void SelectDay(CalendarDay day)
+    {
+        selectedDay = day;
+    }
+
+    public class CalendarDay
+    {
+        public DateTime Date { get; set; }
+        public int Day { get; set; }
+        public bool IsToday { get; set; }
+        public bool IsOtherMonth { get; set; }
+        public int AppointmentCount { get; set; }
+        public List<AppointmentInfo> Appointments { get; set; } = new();
+    }
+
+    public class AppointmentInfo
+    {
+        public string Time { get; set; } = "";
+        public string ClientName { get; set; } = "";
+        public string Service { get; set; } = "";
+        public string Email { get; set; } = "";
+    }
+}

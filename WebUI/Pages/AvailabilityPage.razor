@@ -1,0 +1,207 @@
+﻿@page "/availability"
+
+<PageTitle>Availability - BookingPro</PageTitle>
+
+<div class="availability-container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Set Your Availability</h2>
+            <p class="text-medium">Configure when clients can book appointments with you</p>
+        </div>
+        <div class="card-body">
+            <EditForm Model="@availabilityModel" OnValidSubmit="@SaveAvailability">
+                <div class="availability-grid">
+                    @foreach (var day in availabilityModel.WeekDays)
+                    {
+                        <div class="day-card">
+                            <div class="day-header">
+                                <div class="day-toggle">
+                                    <label class="toggle">
+                                        <InputCheckbox @bind-Value="day.IsEnabled" />
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="day-name">
+                                    <h4>@day.Name</h4>
+                                </div>
+                            </div>
+                            
+                            @if (day.IsEnabled)
+                            {
+                                <div class="day-settings fade-in">
+                                    <div class="time-inputs">
+                                        <div class="form-group">
+                                            <label class="form-label">Start Time</label>
+                                        
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">End Time</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="break-section">
+                                        <div class="break-header">
+                                            <label class="form-label">Break Time (Optional)</label>
+                                            <label class="toggle-small">
+                                                <InputCheckbox @bind-Value="day.HasBreak" />
+                                                <span class="toggle-slider-small"></span>
+                                            </label>
+                                        </div>
+                                        
+                                        @if (day.HasBreak)
+                                        {
+                                            <div class="break-inputs fade-in">
+                                                <div class="form-group">
+                                                    <label class="form-label">Break Start</label>
+                                                </div>
+                                                <div class="form-group">
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                    
+                                    <div class="appointment-duration">
+                                        <label class="form-label">Appointment Duration (minutes)</label>
+                                        <InputSelect class="form-select" @bind-Value="day.AppointmentDuration">
+                                            <option value="15">15 minutes</option>
+                                            <option value="30">30 minutes</option>
+                                            <option value="45">45 minutes</option>
+                                            <option value="60">60 minutes</option>
+                                            <option value="90">90 minutes</option>
+                                            <option value="120">120 minutes</option>
+                                        </InputSelect>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="day-disabled">
+                                    <p class="text-medium text-center">Not available</p>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" disabled="@IsSaving">
+                        @if (IsSaving)
+                        {
+                            <span>Saving...</span>
+                        }
+                        else
+                        {
+                            <span>Save Availability</span>
+                        }
+                    </button>
+                    <button type="button" class="btn btn-outline" @onclick="ResetToDefaults">
+                        Reset to Defaults
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+    
+    <!-- Preview Section -->
+    <div class="card mt-6">
+        <div class="card-header">
+            <h3 class="card-title">Availability Preview</h3>
+            <p class="text-medium">How your schedule will appear to clients</p>
+        </div>
+        <div class="card-body">
+            <div class="preview-grid">
+                @foreach (var day in availabilityModel.WeekDays.Where(d => d.IsEnabled))
+                {
+                    <div class="preview-day">
+                        <div class="preview-day-name">@day.Name</div>
+                        <div class="preview-day-time">
+                            @day.StartTime?.ToString("hh\\:mm") - @day.EndTime?.ToString("hh\\:mm")
+                        </div>
+                        @if (day.HasBreak && day.BreakStart.HasValue && day.BreakEnd.HasValue)
+                        {
+                            <div class="preview-break">
+                                Break: @day.BreakStart?.ToString("hh\\:mm") - @day.BreakEnd?.ToString("hh\\:mm")
+                            </div>
+                        }
+                        <div class="preview-duration">
+                            @day.AppointmentDuration min slots
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private AvailabilityModel availabilityModel = new();
+    private bool IsSaving = false;
+    
+    protected override void OnInitialized()
+    {
+        InitializeDefaultAvailability();
+    }
+    
+    private void InitializeDefaultAvailability()
+    {
+        var dayNames = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+        
+        availabilityModel.WeekDays = dayNames.Select((name, index) => new DayAvailability
+        {
+            Name = name,
+            IsEnabled = index < 5, // Monday to Friday enabled by default
+            StartTime = TimeSpan.FromHours(9), // 9:00 AM
+            EndTime = TimeSpan.FromHours(17), // 5:00 PM
+            HasBreak = true,
+            BreakStart = TimeSpan.FromHours(12), // 12:00 PM
+            BreakEnd = TimeSpan.FromHours(13), // 1:00 PM
+            AppointmentDuration = 60
+        }).ToList();
+    }
+    
+    private async Task SaveAvailability()
+    {
+        IsSaving = true;
+        
+        try
+        {
+            // Simulate API call to save availability
+            await Task.Delay(1000);
+            
+            // Show success message or navigate
+            // NavigationManager.NavigateTo("/dashboard");
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"Error saving availability: {ex.Message}");
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+    
+    private void ResetToDefaults()
+    {
+        InitializeDefaultAvailability();
+        StateHasChanged();
+    }
+    
+    public class AvailabilityModel
+    {
+        public List<DayAvailability> WeekDays { get; set; } = new();
+    }
+    
+    public class DayAvailability
+    {
+        public string Name { get; set; } = "";
+        public bool IsEnabled { get; set; }
+        public TimeSpan? StartTime { get; set; }
+        public TimeSpan? EndTime { get; set; }
+        public bool HasBreak { get; set; }
+        public TimeSpan? BreakStart { get; set; }
+        public TimeSpan? BreakEnd { get; set; }
+        public int AppointmentDuration { get; set; } = 60;
+    }
+}

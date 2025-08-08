@@ -1,0 +1,9 @@
+.full-width {
+    margin-left: 0 !important;
+}
+
+.nav-brand {
+    text-align: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}

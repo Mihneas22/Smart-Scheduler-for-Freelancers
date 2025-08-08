@@ -1,0 +1,98 @@
+﻿.appointment-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+    gap: var(--spacing-md);
+}
+
+    .appointment-item:last-child {
+        border-bottom: none;
+    }
+
+.appointment-time {
+    min-width: 80px;
+}
+
+.appointment-details {
+    flex: 1;
+}
+
+.status-badge {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+    .status-badge.confirmed {
+        background-color: #dcfce7;
+        color: var(--success-color);
+    }
+
+    .status-badge.pending {
+        background-color: #fef3c7;
+        color: var(--warning-color);
+    }
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+    gap: var(--spacing-md);
+}
+
+    .notification-item:last-child {
+        border-bottom: none;
+    }
+
+.notification-icon {
+    font-size: 1.25rem;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.quick-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: var(--text-dark);
+    transition: all 0.2s;
+    text-align: center;
+}
+
+    .quick-action-btn:hover {
+        border-color: var(--primary-color);
+        background-color: var(--background-light);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+.quick-action-icon {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+@media (max-width: 768px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
