@@ -1,5 +1,8 @@
 ﻿@page "/calendar"
+@using Application.DTOs.User.Functions.GetUserData
 @using Application.Services.User
+@using Domain.Models
+@using WebUI.State
 @inject IUserService userService;
 
 <PageTitle>Calendar - BookingPro</PageTitle>
@@ -59,11 +62,10 @@
                                 @foreach (var appointment in selectedDay.Appointments)
                                 {
                                     <div class="appointment-item">
-                                        <div class="appointment-time">@appointment.Time</div>
                                         <div class="appointment-details">
                                             <div class="font-medium">@appointment.ClientName</div>
-                                            <div class="text-sm text-medium">@appointment.Service</div>
-                                            <div class="text-sm text-light">@appointment.Email</div>
+                                            <div class="text-sm text-medium">@appointment.ClientId</div>
+                                            <div class="text-sm text-light">@appointment.ClientName</div>
                                         </div>
                                         <div class="appointment-actions">
                                             <button class="btn btn-outline btn-sm">Edit</button>
@@ -95,10 +97,35 @@
     private List<CalendarDay> calendarDays = new();
     private CalendarDay? selectedDay;
     private string[] dayNames = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    private User? UserData { get; set; }
+    private List<Appointment> appointmentsUser = new();
 
     protected override void OnInitialized()
     {
         GenerateCalendarDays();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var customAuthStateProvider = (CustomAuthStateProvider)authProvider;
+        var state = await authProvider.GetAuthenticationStateAsync();
+
+        var user = state.User.Identity;
+        if (user != null)
+        {
+            var name = user.Name;
+            if (name != null)
+            {
+                var result = await userService.GetUserService(new GetUserDTO { UserName = name });
+
+                if (result.Flag == true)
+                {
+                    UserData = result.userData;
+                    if (UserData.Appointments != null)
+                        appointmentsUser = UserData.Appointments.ToList();
+                }
+            }
+        }
     }
 
     private void GenerateCalendarDays()
@@ -132,30 +159,14 @@
     private int GetAppointmentCount(DateTime date)
     {
         // Simulate appointment data
-        var random = new Random(date.GetHashCode());
-        return random.Next(0, 5);
+        var apps = appointmentsUser.Where(a => a.StartTime < date && a.EndTime > date);
+        return apps.Count();
     }
 
-    private List<AppointmentInfo> GetAppointmentsForDay(DateTime date)
+    private List<Appointment> GetAppointmentsForDay(DateTime date)
     {
-        var appointments = new List<AppointmentInfo>();
-        var count = GetAppointmentCount(date);
-
-        var sampleClients = new[] { "John Doe", "Jane Smith", "Bob Johnson", "Alice Brown", "Mike Wilson" };
-        var sampleServices = new[] { "Consultation", "Design Review", "Strategy Session", "Technical Support", "Project Planning" };
-
-        for (int i = 0; i < count; i++)
-        {
-            appointments.Add(new AppointmentInfo
-            {
-                Time = $"{9 + i * 2}:00 AM",
-                ClientName = sampleClients[i % sampleClients.Length],
-                Service = sampleServices[i % sampleServices.Length],
-                Email = $"{sampleClients[i % sampleClients.Length].ToLower().Replace(" ", ".")}@email.com"
-            });
-        }
-
-        return appointments;
+        var apps = appointmentsUser.Where(a => a.StartTime < date && a.EndTime > date);
+        return apps.ToList();
     }
 
     private void PreviousMonth()
@@ -184,14 +195,6 @@
         public bool IsToday { get; set; }
         public bool IsOtherMonth { get; set; }
         public int AppointmentCount { get; set; }
-        public List<AppointmentInfo> Appointments { get; set; } = new();
-    }
-
-    public class AppointmentInfo
-    {
-        public string Time { get; set; } = "";
-        public string ClientName { get; set; } = "";
-        public string Service { get; set; } = "";
-        public string Email { get; set; } = "";
+        public List<Appointment> Appointments { get; set; } = new();
     }
 }
